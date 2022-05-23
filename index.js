@@ -24,11 +24,21 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
   await client.connect();
   const toolsCollection = client.db("heavy-duty-tools-db").collection("tools");
+  const orderCollection = client.db("heavy-duty-tools-db").collection("orders");
 app.get('/tools',async (req,res)=>{
   const tools = await toolsCollection.find().toArray();
   res.send(tools);
 })
 
+//Adding Orders to order collection
+app.post('/orders',async(req,res)=>{
+  const orderData = req.body;
+  console.log(orderData);
+  const result = await orderCollection.insertOne(orderData);
+  res.send(result);
+ 
+
+})
   
 }
 run().catch(console.dir);
