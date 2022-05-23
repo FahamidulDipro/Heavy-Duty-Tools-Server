@@ -37,6 +37,7 @@ async function run() {
     const orderData = req.body;
     console.log(orderData);
     if (orderData.availableQuantity >= orderData.amount) {
+      delete orderData.availableQuantity;
       const result = await orderCollection.insertOne(orderData);
       res.send(result);
     }
