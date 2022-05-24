@@ -109,16 +109,36 @@ async function run() {
     res.send(users);
   });
   //Making a user Admin
-  app.put("/user/admin/:email", async (req, res) => {
+  app.put("/user/admin/:email", verifyJWT, async (req, res) => {
     const email = req.params.email;
     const initiator = req.decoded.email;
     const initiatorAccount = await userCollection.findOne({ email: initiator });
-    const filter = { email: email };
-    const updatedDoc = {
-      $set: { role: "admin" },
-    };
-    const result = await userCollection.updateOne(filter, updatedDoc);
-    res.send(result);
+    if (initiatorAccount.role === "admin") {
+      const filter = { email: email };
+      const updatedDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    } else {
+      res.status(403).send({ message: "Access Denied!" });
+    }
+  });
+  //Admin route
+  app.get("/admin/:email", verifyJWT, async (req, res) => {
+    const email = req.params.email;
+    const user = await userCollection.findOne({ email: email });
+    const isAdmin = user.role === "admin";
+    res.send({ admin: isAdmin });
+  });
+
+  //Getting the specific order for paying
+  app.get("/orders/:id", verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    console.log(id);
+    const order = await orderCollection.findOne(query).toArray();
+    res.send(order);
   });
 }
 run().catch(console.dir);
