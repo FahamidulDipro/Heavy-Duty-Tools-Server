@@ -203,10 +203,16 @@ async function run() {
   //Deleting Specific Tool
   app.delete("/tool/:id", verifyJWT, async (req, res) => {
     const id = req.params.id;
-    const toolInfo = req.body;
     const query = { _id: ObjectId(id) };
     const deletedTool = await toolsCollection.deleteOne(query);
     res.send(deletedTool);
+  });
+  //Deleting Specific User
+  app.delete("/user/:id", verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    const deletedUser = await userCollection.deleteOne(query);
+    res.send(deletedUser);
   });
 }
 run().catch(console.dir);
