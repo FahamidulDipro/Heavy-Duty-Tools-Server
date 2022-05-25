@@ -51,7 +51,7 @@ async function run() {
   });
 
   //Adding Orders to order collection
-  app.post("/orders", async (req, res) => {
+  app.post("/orders", verifyJWT, async (req, res) => {
     const orderData = req.body;
     console.log(orderData);
     if (orderData.availableQuantity >= orderData.amount) {
@@ -133,11 +133,11 @@ async function run() {
   });
 
   //Getting the specific order for paying
-  app.get("/orders/:id", verifyJWT, async (req, res) => {
+  app.get("/order/:id", verifyJWT, async (req, res) => {
     const id = req.params.id;
     const query = { _id: ObjectId(id) };
     console.log(id);
-    const order = await orderCollection.findOne(query).toArray();
+    const order = await orderCollection.findOne(query);
     res.send(order);
   });
 }
