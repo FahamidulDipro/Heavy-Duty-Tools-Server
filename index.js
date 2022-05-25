@@ -229,6 +229,13 @@ async function run() {
     const result = await toolsCollection.insertOne(correctedToolData);
     res.send(result);
   });
+  //Canceling Ordered Items
+  app.delete("/my_order/:id", verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: ObjectId(id) };
+    const deletedOrder = await orderCollection.deleteOne(query);
+    res.send(deletedOrder);
+  });
 }
 run().catch(console.dir);
 
