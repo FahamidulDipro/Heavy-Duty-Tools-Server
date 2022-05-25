@@ -192,12 +192,21 @@ async function run() {
     const shippedOrder = await orderCollection.updateOne(filter, updatedDoc);
     res.send(shippedOrder);
   });
+  //Deleting Specific Order
   app.delete("/order/:id", verifyJWT, async (req, res) => {
     const id = req.params.id;
     const orderInfo = req.body;
     const query = { _id: ObjectId(id) };
     const deletedOrder = await orderCollection.deleteOne(query);
     res.send(deletedOrder);
+  });
+  //Deleting Specific Tool
+  app.delete("/tool/:id", verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const toolInfo = req.body;
+    const query = { _id: ObjectId(id) };
+    const deletedTool = await toolsCollection.deleteOne(query);
+    res.send(deletedTool);
   });
 }
 run().catch(console.dir);
