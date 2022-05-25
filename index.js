@@ -214,6 +214,21 @@ async function run() {
     const deletedUser = await userCollection.deleteOne(query);
     res.send(deletedUser);
   });
+  //Inserting New Tool
+  app.post("/tools", verifyJWT, async (req, res) => {
+    const tool = req.body;
+    const correctedToolData = {
+      name: tool.name,
+      image: tool.image,
+      shortDescription: "This is a great tool, You will be happy using it",
+      availableQuantity: parseFloat(tool.availableQuantity),
+      minimumOrderQuantity: parseFloat(tool.minimumOrderQuantity),
+      price: parseFloat(tool.price),
+    };
+    console.log(correctedToolData);
+    const result = await toolsCollection.insertOne(correctedToolData);
+    res.send(result);
+  });
 }
 run().catch(console.dir);
 
