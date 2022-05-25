@@ -158,22 +158,39 @@ async function run() {
     res.send({
       clientSecret: paymentIntent.client_secret,
     });
-    //Updating Order information after payment
-
-    app.patch("/order/:id", verifyJWT, async (req, res) => {
-      const id = req.params.id;
-      const paymentInfo = req.body;
-      const filter = { _id: ObjectId(id) };
-      const updatedDoc = {
-        $set: {
-          paid: true,
-          transactionId: paymentInfo.transactionId,
-        },
-      };
-      const result = await paymentCollection.insertOne(paymentInfo);
-      const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
-      res.send(updatedOrder);
-    });
+  });
+  //Updating Order information after payment
+  app.patch("/order/:id", verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const paymentInfo = req.body;
+    const filter = { _id: ObjectId(id) };
+    const updatedDoc = {
+      $set: {
+        paid: true,
+        transactionId: paymentInfo.transactionId,
+      },
+    };
+    const result = await paymentCollection.insertOne(paymentInfo);
+    const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
+    res.send(updatedOrder);
+  });
+  //Managing All Orders
+  app.get("/orders", async (req, res) => {
+    const orders = await orderCollection.find().toArray();
+    res.send(orders);
+  });
+  //Approved Orders
+  app.put("/order/:id", verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const orderInfo = req.body;
+    const filter = { _id: ObjectId(id) };
+    const updatedDoc = {
+      $set: {
+        shipped: true,
+      },
+    };
+    const shippedOrder = await orderCollection.updateOne(filter, updatedDoc);
+    res.send(shippedOrder);
   });
 }
 run().catch(console.dir);
