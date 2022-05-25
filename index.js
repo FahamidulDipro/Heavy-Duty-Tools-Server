@@ -49,7 +49,19 @@ async function run() {
     .db("heavy-duty-tools-db")
     .collection("payments");
   app.get("/tools", async (req, res) => {
-    const tools = await toolsCollection.find().toArray();
+    const page = parseInt(req.query.page);
+    const size = parseInt(req.query.size);
+    let tools;
+    if (page || size) {
+      tools = await toolsCollection
+        .find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+    } else {
+      tools = await toolsCollection.find().toArray();
+    }
+
     res.send(tools);
   });
 
@@ -235,6 +247,11 @@ async function run() {
     const query = { _id: ObjectId(id) };
     const deletedOrder = await orderCollection.deleteOne(query);
     res.send(deletedOrder);
+  });
+  //For Pagination
+  app.get("/toolCount", async (req, res) => {
+    const count = await toolsCollection.estimatedDocumentCount();
+    res.send({ count });
   });
 }
 run().catch(console.dir);
