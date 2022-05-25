@@ -192,6 +192,13 @@ async function run() {
     const shippedOrder = await orderCollection.updateOne(filter, updatedDoc);
     res.send(shippedOrder);
   });
+  app.delete("/order/:id", verifyJWT, async (req, res) => {
+    const id = req.params.id;
+    const orderInfo = req.body;
+    const query = { _id: ObjectId(id) };
+    const deletedOrder = await orderCollection.deleteOne(query);
+    res.send(deletedOrder);
+  });
 }
 run().catch(console.dir);
 
