@@ -45,6 +45,9 @@ async function run() {
   const toolsCollection = client.db("heavy-duty-tools-db").collection("tools");
   const orderCollection = client.db("heavy-duty-tools-db").collection("orders");
   const userCollection = client.db("heavy-duty-tools-db").collection("users");
+  const paymentCollection = client
+    .db("heavy-duty-tools-db")
+    .collection("payments");
   app.get("/tools", async (req, res) => {
     const tools = await toolsCollection.find().toArray();
     res.send(tools);
@@ -154,6 +157,22 @@ async function run() {
     });
     res.send({
       clientSecret: paymentIntent.client_secret,
+    });
+    //Updating Order information after payment
+
+    app.patch("/order/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const paymentInfo = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: paymentInfo.transactionId,
+        },
+      };
+      const result = await paymentCollection.insertOne(paymentInfo);
+      const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
+      res.send(updatedOrder);
     });
   });
 }
