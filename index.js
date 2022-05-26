@@ -260,14 +260,19 @@ async function run() {
   app.post("/reviews", verifyJWT, async (req, res) => {
     const review = req.body;
     const reviewData = {
-      name: review.reviewerName,
-
+      name: review.name,
+      email: review.email,
       review: review.review,
       ratings: parseFloat(review.ratings),
     };
-    console.log(reviewData);
+    console.log(review);
     const result = await reviewCollection.insertOne(reviewData);
     res.send(result);
+  });
+  //Getting All Reviews
+  app.get("/reviews", verifyJWT, async (req, res) => {
+    const allReviews = await reviewCollection.find().toArray();
+    res.send(allReviews);
   });
 }
 run().catch(console.dir);
