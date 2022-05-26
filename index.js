@@ -6,6 +6,7 @@ const res = require("express/lib/response");
 const app = express();
 const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
+const query = require("express/lib/middleware/query");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
@@ -45,6 +46,9 @@ async function run() {
   const toolsCollection = client.db("heavy-duty-tools-db").collection("tools");
   const orderCollection = client.db("heavy-duty-tools-db").collection("orders");
   const userCollection = client.db("heavy-duty-tools-db").collection("users");
+  const profileCollection = client
+    .db("heavy-duty-tools-db")
+    .collection("profiles");
   const reviewCollection = client
     .db("heavy-duty-tools-db")
     .collection("reviews");
@@ -81,8 +85,6 @@ async function run() {
   //Updating Available Quantities
   app.put("/tools", async (req, res) => {
     const { selectedToolId, availableQuantity } = req.body;
-    console.log(availableQuantity);
-    console.log("tool id: ", selectedToolId);
     const filter = { _id: ObjectId(selectedToolId) };
     const option = { upsert: true };
     const updateDoc = {
@@ -99,7 +101,7 @@ async function run() {
     const user = req.body;
     const filter = { email: email };
     const option = { upsert: true };
-    console.log(user);
+
     const updatedDoc = {
       $set: user,
     };
@@ -154,14 +156,14 @@ async function run() {
   app.get("/order/:id", verifyJWT, async (req, res) => {
     const id = req.params.id;
     const query = { _id: ObjectId(id) };
-    console.log(id);
+
     const order = await orderCollection.findOne(query);
     res.send(order);
   });
   //Creating Payment
   app.post("/create_payment_intent", verifyJWT, async (req, res) => {
     const price = req.body.totalAmountPay;
-    console.log(price);
+
     const amount = price * 100;
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
@@ -240,7 +242,7 @@ async function run() {
       minimumOrderQuantity: parseFloat(tool.minimumOrderQuantity),
       price: parseFloat(tool.price),
     };
-    console.log(correctedToolData);
+
     const result = await toolsCollection.insertOne(correctedToolData);
     res.send(result);
   });
@@ -262,17 +264,58 @@ async function run() {
     const reviewData = {
       name: review.name,
       email: review.email,
+      image: review.image,
       review: review.review,
       ratings: parseFloat(review.ratings),
     };
-    console.log(review);
+
     const result = await reviewCollection.insertOne(reviewData);
     res.send(result);
   });
   //Getting All Reviews
-  app.get("/reviews", verifyJWT, async (req, res) => {
-    const allReviews = await reviewCollection.find().toArray();
+  app.get("/reviews", async (req, res) => {
+    const page = parseInt(req.query.page);
+    const size = parseInt(req.query.size);
+
+    let allReviews;
+    if (page || size) {
+      allReviews = await reviewCollection
+        .find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+    } else {
+      allReviews = await reviewCollection.find().toArray();
+    }
     res.send(allReviews);
+  });
+  //For Pagination of Reviews
+  app.get("/reviewCount", async (req, res) => {
+    const count = await reviewCollection.estimatedDocumentCount();
+    res.send({ count });
+  });
+  //Updating user profiles
+  app.put("/profile/:email", verifyJWT, async (req, res) => {
+    const email = req.params.email;
+    const profile = req.body;
+    const filter = { email: email };
+    const option = { upsert: true };
+
+    const updatedDoc = {
+      $set: profile,
+    };
+    const result = await profileCollection.updateOne(
+      filter,
+      updatedDoc,
+      option
+    );
+
+    res.send(result);
+  });
+  //Getting Data from profile
+  app.get("/profiles", async (req, res) => {
+    const profiles = await profileCollection.find().toArray();
+    res.send(profiles);
   });
 }
 run().catch(console.dir);
