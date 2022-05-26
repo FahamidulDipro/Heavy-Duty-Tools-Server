@@ -45,6 +45,9 @@ async function run() {
   const toolsCollection = client.db("heavy-duty-tools-db").collection("tools");
   const orderCollection = client.db("heavy-duty-tools-db").collection("orders");
   const userCollection = client.db("heavy-duty-tools-db").collection("users");
+  const reviewCollection = client
+    .db("heavy-duty-tools-db")
+    .collection("reviews");
   const paymentCollection = client
     .db("heavy-duty-tools-db")
     .collection("payments");
@@ -232,7 +235,7 @@ async function run() {
     const correctedToolData = {
       name: tool.name,
       image: tool.image,
-      shortDescription: "This is a great tool, You will be happy using it",
+      shortDescription: tool.shortDescription,
       availableQuantity: parseFloat(tool.availableQuantity),
       minimumOrderQuantity: parseFloat(tool.minimumOrderQuantity),
       price: parseFloat(tool.price),
@@ -252,6 +255,19 @@ async function run() {
   app.get("/toolCount", async (req, res) => {
     const count = await toolsCollection.estimatedDocumentCount();
     res.send({ count });
+  });
+  //Adding Review
+  app.post("/reviews", verifyJWT, async (req, res) => {
+    const review = req.body;
+    const reviewData = {
+      name: review.reviewerName,
+
+      review: review.review,
+      ratings: parseFloat(review.ratings),
+    };
+    console.log(reviewData);
+    const result = await reviewCollection.insertOne(reviewData);
+    res.send(result);
   });
 }
 run().catch(console.dir);
